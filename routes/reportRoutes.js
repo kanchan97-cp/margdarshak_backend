@@ -22,26 +22,34 @@ router.post("/generate", async (req, res) => {
       });
     }
 
-    const quizAnswers = quizzes.map((q) => ({
-      type: q.type,
-      responses: Object.values(q.responses || {}),
-    }));
-
-    const reportData = await generateReport(req.user, quizAnswers);
-
     const report = await Report.create({
       userId: req.user.id,
-      ...reportData,
-      quizAnswers,
-      title: "AI Generated Career Report"
+      title: "Generating your Career Report...",
+      status: "processing"
     });
 
-    res.status(201).json(report);
+    const quizAnswers = quizzes.map(q => ({
+      type: q.type,
+      responses: Object.values(q.responses?.[0] || {})
+    }));
+
+    generateReport(req.user, quizAnswers).then(async (reportData) => {
+      await Report.findByIdAndUpdate(report._id, {
+        ...reportData,
+        quizAnswers,
+        title: "AI Generated Career Report",
+        status: "ready"
+      });
+    });
+
+    res.status(202).json({ reportId: report._id });
+
   } catch (err) {
     console.error("Report Generation Error:", err);
-    res.status(500).json({ error: "❌ Internal Server Error" });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 /* ====================== GET ALL USER REPORTS ====================== */
 router.get("/", async (req, res) => {

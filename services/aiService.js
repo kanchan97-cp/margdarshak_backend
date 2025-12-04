@@ -1,64 +1,85 @@
 const OpenAI = require("openai");
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+/* ===========================================================
+   🚀 Generate AI Career Report
+   =========================================================== */
 exports.generateReport = async (user, quizAnswers) => {
   try {
     const prompt = `
 You are an expert Indian Career Counselor.
-Generate a detailed and realistic Career Report based on student's quiz responses.
+Analyze the student's quiz answers and generate a meaningful and actionable career guidance report.
 
 User Name: ${user.name}
-Quiz Results (Interest + Aptitude + Personality + Orientation + EQ):
+Quiz Results:
 ${JSON.stringify(quizAnswers, null, 2)}
 
-STRICTLY return output in this JSON format only:
+📌 STRICT JSON OUTPUT FORMAT ONLY:
 
 {
   "title": "AI Generated Career Report",
   "topCareers": [
     {
-      "careerName": "Career suggestion",
-      "whyFit": "Why student is suitable"
+      "careerName": "",
+      "whyFit": ""
     }
   ],
   "roadmap": [
     {
-      "step": "What student must do",
-      "timeline": "Time duration (1 month / 6 months / 1 year)"
+      "step": "",
+      "timeline": ""
     }
   ],
-  "educationPath": [
-    "Degree names suitable to career"
-  ],
-  "entranceExams": [
-    "Exam options if relevant"
-  ],
-  "softSkills": [
-    "Skills the student must improve"
-  ],
-  "conclusion": "Motivational customized summary"
+  "educationPath": [""],
+  "entranceExams": [""],
+  "softSkills": [""],
+  "conclusion": ""
 }
 `;
 
-    const response = await client.chat.completions.create({
+    const res = await client.chat.completions.create({
       model: "gpt-4o-mini",
       response_format: { type: "json_object" },
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 1024
+      messages: [
+        { role: "system", content: "You are a professional career analyst." },
+        { role: "user", content: prompt }
+      ],
+      max_tokens: 1200
     });
 
-    return JSON.parse(response.choices[0].message.content);
+    return JSON.parse(res.choices[0].message.content);
 
   } catch (err) {
-    console.error("🔥 AI ERROR:", err);
+    console.error("🔥 AI REPORT ERROR:", err);
     return {
-      title: "Career Report",
+      title: "AI Generated Career Report",
       topCareers: [],
       roadmap: [],
       educationPath: [],
       entranceExams: [],
       softSkills: [],
-      conclusion: "AI failed to generate report."
+      conclusion: "AI failed to generate personalized analysis."
     };
+  }
+};
+
+/* ===========================================================
+   💬 AI Chat Response
+   =========================================================== */
+exports.generateChatResponse = async (message) => {
+  try {
+    const res = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are a friendly AI career counselor. Provide clear, short advice." },
+        { role: "user", content: message }
+      ],
+      max_tokens: 300
+    });
+
+    return res.choices[0].message.content;
+  } catch (err) {
+    console.error("🔥 AI CHAT ERROR:", err);
+    return "Sorry, something went wrong. Please try again!";
   }
 };
