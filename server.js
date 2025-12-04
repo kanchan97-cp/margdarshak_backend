@@ -11,7 +11,8 @@ const authMiddleware = require('./middleware/auth');
 
 const app = express();
 
-app.use(cors());
+// Allow all origins temporarily
+app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json());
 
 // MongoDB Connection
@@ -26,7 +27,6 @@ app.use('/api/quizzes', authMiddleware, quizRoutes);
 app.use('/api/reports', authMiddleware, reportRoutes);
 app.use('/api/admin', authMiddleware, adminRoutes);
 
-// Always listen on port 5000
-const PORT = 5000;
+// Use Render assigned port or fallback to 5000 locally
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
