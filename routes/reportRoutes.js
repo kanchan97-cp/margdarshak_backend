@@ -5,22 +5,26 @@ const router = express.Router();
 
 const Quiz = require("../models/Quiz");
 const Report = require("../models/Report");
+const authMiddleware = require("../middleware/auth");
 const { generateReport } = require("../services/aiService");
+
+// 🔐 Apply Authentication to All Routes
+router.use(authMiddleware);
 
 /* ====================== GENERATE REPORT ====================== */
 router.post("/generate", async (req, res) => {
   try {
     const quizzes = await Quiz.find({ userId: req.user.id, completed: true });
 
-    if (!quizzes || quizzes.length === 0) {
+    if (!quizzes || quizzes.length < 5) {
       return res.status(400).json({
-        error: "Please complete at least one quiz to generate a report.",
+        error: "⚠ Please complete all quizzes before generating report!",
       });
     }
 
     const quizAnswers = quizzes.map((q) => ({
       type: q.type,
-      responses: Object.values(q.responses?.[0] || {}),
+      responses: Object.values(q.responses || {}),
     }));
 
     const reportData = await generateReport(req.user, quizAnswers);
@@ -29,6 +33,7 @@ router.post("/generate", async (req, res) => {
       userId: req.user.id,
       ...reportData,
       quizAnswers,
+      title: "AI Generated Career Report"
     });
 
     res.status(201).json(report);
@@ -42,7 +47,7 @@ router.post("/generate", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const reports = await Report.find({ userId: req.user.id }).sort({
-      createdAt: -1,
+      createdAt: -1
     });
     res.json(reports);
   } catch (err) {
@@ -54,8 +59,6 @@ router.get("/", async (req, res) => {
 /* ====================== DELETE REPORT ====================== */
 router.delete("/:id", async (req, res) => {
   try {
-    console.log("DELETE /api/reports/" + req.params.id);
-
     const report = await Report.findOneAndDelete({
       _id: req.params.id,
       userId: req.user.id
