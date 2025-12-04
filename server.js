@@ -1,4 +1,5 @@
-// server.js (Fix)
+// backend/server.js
+
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -13,18 +14,35 @@ const authMiddleware = require("./middleware/auth");
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
 app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URI)
+// Connect DB
+mongoose
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected 🚀"))
-  .catch(err => console.log("DB Error ❌", err));
+  .catch((err) => console.log("❌ Mongo DB Error:", err));
 
+// Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/quizzes", authMiddleware, quizRoutes);
 app.use("/api/admin", authMiddleware, adminRoutes);
-app.use("/api/reports", reportRoutes);
-app.use("/api/chat", chatRoutes);  // ✔ Correct — only once
+app.use("/api/quizzes", authMiddleware, quizRoutes);
+app.use("/api/reports", authMiddleware, reportRoutes);
+app.use("/api/chat", authMiddleware, chatRoutes);
+
+// Default route
+app.get("/", (req, res) => {
+  res.send("Server running successfully 🚀");
+});
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+app.listen(PORT, () =>
+  console.log(`Server running on port ${PORT} 🟢`)
+);
