@@ -4,50 +4,54 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 exports.generateReport = async (user, quizAnswers) => {
   try {
     const prompt = `
-You are an AI Career Counselor. 
-Analyze quiz responses and generate a detailed career guidance report.
+Analyze the following quiz responses and generate a personalized career report.
 
 User: ${user.name}
 Quiz Data: ${JSON.stringify(quizAnswers)}
 
-Respond STRICTLY in JSON format with this structure:
+Respond ONLY in JSON with this structure:
 
 {
   "topCareers": [
     {
-      "careerName": "",
-      "whyFit": ""
+      "careerName": "string",
+      "whyFit": "string"
     }
   ],
   "roadmap": [
     {
-      "step": "",
-      "timeline": ""
+      "step": "string",
+      "timeline": "string"
     }
   ],
-  "educationPath": [""],
-  "entranceExams": [""],
-  "softSkills": [""],
-  "conclusion": ""
+  "educationPath": ["string"],
+  "entranceExams": ["string"],
+  "softSkills": ["string"],
+  "conclusion": "string"
 }
 `;
 
     const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      response_format: { type: "json_object" },
+      model: "gpt-4.1-mini",
       messages: [
-        { role: "system", content: "You are a professional career analyst." },
-        { role: "user", content: prompt }
-      ]
+        { role: "system", content: "You are a senior career counselor AI." },
+        { role: "user", content: prompt },
+      ],
+      response_format: { type: "json_object" }
     });
 
     const reportJson = JSON.parse(completion.choices[0].message.content);
-    console.log("AI Report Generated:", reportJson);
-
+    console.log("📌 AI Report Generated Successfully!");
     return reportJson;
 
-  } catch (err) {
-    console.error("AI ERROR:", err);
+  } catch (error) {
+    console.error("❌ AI ERROR:", error.message);
+
+    if (error.response) {
+      const errText = await error.response.text();
+      console.error("🔍 AI RESPONSE BODY:", errText);
+    }
+
     return {
       topCareers: [],
       roadmap: [],

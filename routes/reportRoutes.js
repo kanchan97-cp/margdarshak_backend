@@ -5,11 +5,7 @@ const router = express.Router();
 
 const Quiz = require("../models/Quiz");
 const Report = require("../models/Report");
-const authMiddleware = require("../middleware/auth");
 const { generateReport } = require("../services/aiService");
-
-// 🔐 Sab report routes ke liye auth required
-router.use(authMiddleware);
 
 /* ====================== GENERATE REPORT ====================== */
 router.post("/generate", async (req, res) => {
@@ -55,21 +51,21 @@ router.get("/", async (req, res) => {
   }
 });
 
-/* ====================== DELETE REPORT (PERMANENT) ====================== */
+/* ====================== DELETE REPORT ====================== */
 router.delete("/:id", async (req, res) => {
   try {
     console.log("DELETE /api/reports/" + req.params.id);
 
-    // ✅ Sirf _id se delete – userId check abhi hata diya
-    const report = await Report.findByIdAndDelete(req.params.id);
+    const report = await Report.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user.id
+    });
 
     if (!report) {
-      console.log("Report not found for id:", req.params.id);
       return res.status(404).json({ error: "Report not found" });
     }
 
-    console.log("Deleted report:", report._id);
-    res.json({ message: "Report deleted permanently" });
+    res.json({ message: "Report deleted successfully" });
   } catch (err) {
     console.error("Delete Error:", err);
     res.status(500).json({ error: "Failed to delete report" });

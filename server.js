@@ -8,7 +8,7 @@ const mongoose = require("mongoose");
 const adminRoutes = require("./routes/admin");
 const authRoutes = require("./routes/auth");
 const quizRoutes = require("./routes/quizzes");
-const reportRoutes = require("./routes/reportRoutes"); // ✅ correct file
+const reportRoutes = require("./routes/reportRoutes"); 
 const chatRoutes = require("./routes/chat");
 const authMiddleware = require("./middleware/auth");
 
