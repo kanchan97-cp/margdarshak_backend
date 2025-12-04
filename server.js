@@ -11,6 +11,7 @@ const quizRoutes = require("./routes/quizzes");
 const reportRoutes = require("./routes/reportRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const authMiddleware = require("./middleware/auth");
+const resetQuizRoutes = require("./routes/resetQuizRoutes");
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use("/api/admin", authMiddleware, adminRoutes);
 app.use("/api/quizzes", authMiddleware, quizRoutes);
 app.use("/api/reports", authMiddleware, reportRoutes);
 app.use("/api/chat", authMiddleware, chatRoutes);
+app.use("/api/quizzes/reset", resetQuizRoutes);
 
 // Default route
 app.get("/", (req, res) => {
@@ -46,3 +48,6 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
   console.log(`Server running on port ${PORT} 🟢`)
 );
+
+
+
