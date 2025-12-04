@@ -4,61 +4,61 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 exports.generateReport = async (user, quizAnswers) => {
   try {
     const prompt = `
-Analyze the following quiz responses and generate a personalized career report.
+You are an expert Indian Career Counselor.
+Generate a detailed and realistic Career Report based on student's quiz responses.
 
-User: ${user.name}
-Quiz Data: ${JSON.stringify(quizAnswers)}
+User Name: ${user.name}
+Quiz Results (Interest + Aptitude + Personality + Orientation + EQ):
+${JSON.stringify(quizAnswers, null, 2)}
 
-Respond ONLY in JSON with this structure:
+STRICTLY return output in this JSON format only:
 
 {
+  "title": "AI Generated Career Report",
   "topCareers": [
     {
-      "careerName": "string",
-      "whyFit": "string"
+      "careerName": "Career suggestion",
+      "whyFit": "Why student is suitable"
     }
   ],
   "roadmap": [
     {
-      "step": "string",
-      "timeline": "string"
+      "step": "What student must do",
+      "timeline": "Time duration (1 month / 6 months / 1 year)"
     }
   ],
-  "educationPath": ["string"],
-  "entranceExams": ["string"],
-  "softSkills": ["string"],
-  "conclusion": "string"
+  "educationPath": [
+    "Degree names suitable to career"
+  ],
+  "entranceExams": [
+    "Exam options if relevant"
+  ],
+  "softSkills": [
+    "Skills the student must improve"
+  ],
+  "conclusion": "Motivational customized summary"
 }
 `;
 
-    const completion = await client.chat.completions.create({
-      model: "gpt-4.1-mini",
-      messages: [
-        { role: "system", content: "You are a senior career counselor AI." },
-        { role: "user", content: prompt },
-      ],
-      response_format: { type: "json_object" }
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      response_format: { type: "json_object" },
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 1024
     });
 
-    const reportJson = JSON.parse(completion.choices[0].message.content);
-    console.log("📌 AI Report Generated Successfully!");
-    return reportJson;
+    return JSON.parse(response.choices[0].message.content);
 
-  } catch (error) {
-    console.error("❌ AI ERROR:", error.message);
-
-    if (error.response) {
-      const errText = await error.response.text();
-      console.error("🔍 AI RESPONSE BODY:", errText);
-    }
-
+  } catch (err) {
+    console.error("🔥 AI ERROR:", err);
     return {
+      title: "Career Report",
       topCareers: [],
       roadmap: [],
       educationPath: [],
       entranceExams: [],
       softSkills: [],
-      conclusion: "AI failed to generate personalized analysis."
+      conclusion: "AI failed to generate report."
     };
   }
 };

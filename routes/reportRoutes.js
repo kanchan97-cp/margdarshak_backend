@@ -8,7 +8,7 @@ const Report = require("../models/Report");
 const authMiddleware = require("../middleware/auth");
 const { generateReport } = require("../services/aiService");
 
-// 🔐 Apply Authentication to All Routes
+// 🔐 Apply Authentication Middleware
 router.use(authMiddleware);
 
 /* ====================== GENERATE REPORT ====================== */
@@ -39,24 +39,43 @@ router.post("/generate", async (req, res) => {
     res.status(201).json(report);
   } catch (err) {
     console.error("Report Generation Error:", err);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "❌ Internal Server Error" });
   }
 });
 
-/* ====================== GET USER REPORTS ====================== */
+/* ====================== GET ALL USER REPORTS ====================== */
 router.get("/", async (req, res) => {
   try {
     const reports = await Report.find({ userId: req.user.id }).sort({
-      createdAt: -1
+      createdAt: -1,
     });
     res.json(reports);
   } catch (err) {
     console.error("Fetch Reports Error:", err);
-    res.status(500).json({ error: "Failed to fetch reports" });
+    res.status(500).json({ error: "❌ Failed to fetch reports" });
   }
 });
 
-/* ====================== DELETE REPORT ====================== */
+/* ====================== GET SINGLE REPORT ====================== */
+router.get("/:id", async (req, res) => {
+  try {
+    const report = await Report.findOne({
+      _id: req.params.id,
+      userId: req.user.id
+    });
+
+    if (!report) {
+      return res.status(404).json({ error: "⚠ Report not found" });
+    }
+
+    res.json(report);
+  } catch (err) {
+    console.error("Single Report Fetch Error:", err);
+    res.status(500).json({ error: "❌ Failed to fetch report" });
+  }
+});
+
+/* ====================== DELETE REPORT PERMANENTLY ====================== */
 router.delete("/:id", async (req, res) => {
   try {
     const report = await Report.findOneAndDelete({
@@ -65,13 +84,13 @@ router.delete("/:id", async (req, res) => {
     });
 
     if (!report) {
-      return res.status(404).json({ error: "Report not found" });
+      return res.status(404).json({ error: "⚠ Report not found" });
     }
 
-    res.json({ message: "Report deleted successfully" });
+    res.json({ message: "🗑 Report deleted successfully" });
   } catch (err) {
     console.error("Delete Error:", err);
-    res.status(500).json({ error: "Failed to delete report" });
+    res.status(500).json({ error: "❌ Failed to delete report" });
   }
 });
 
